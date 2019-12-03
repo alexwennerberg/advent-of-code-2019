@@ -13,7 +13,7 @@ fn main() {
     let noun = 12;
     let verb = 2;
     let result = run_program(program.clone(), noun, verb);
-    println!("{}", result);
+    println!("part 1: {}", result);
     // Part 2
     for noun in 0..100 {
         for verb in 0..100 {
