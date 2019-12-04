@@ -12,6 +12,8 @@ fn main() {
         .filter(|v| HashSet::<&i32>::from_iter(v.iter()).len() != v.len())
         .collect();
     println!("part 1: {}", result.len());
+    // Much better solution:
+    // https://www.reddit.com/r/adventofcode/comments/e5u5fv/2019_day_4_solutions/f9mkj4v?utm_source=share&utm_medium=web2x
     let part2 = result
                     .iter()
                     .filter(|v| { 
