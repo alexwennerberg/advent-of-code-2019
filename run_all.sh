@@ -8,4 +8,5 @@ for i in aoc*
 do
   echo "Running $i"
   $i/target/release/$i < $i/input/input.txt
+  echo ""
 done
