@@ -10,7 +10,7 @@ fn main() {
             i.parse::<i32>().unwrap()})
         .collect();
     // Part 1
-    let input = 1;
+    let input = 5;
     run_program(program.clone(), input);
     // part 2
 }
@@ -23,7 +23,7 @@ fn run_program(mut program: Vec<i32>, input: i32) {
         let opcode = current_instruction % 100;
         let get_values = |parameters| {
             let mut out = Vec::new();
-            for i in 1..parameters {
+            for i in 1..=parameters {
                 let mut value = program[(instruction_pointer+i) as usize];
                 let mode = (current_instruction / (i32::pow(10, i as u32)*10)) % 10;
                 if mode == 0 { // position mode
@@ -34,17 +34,15 @@ fn run_program(mut program: Vec<i32>, input: i32) {
             }
             out
         };
-        println!("opcode {}", opcode);
         if opcode == 1 {
             let ptr = program[instruction_pointer + 3];
-            let params = get_values(3);
+            let params = get_values(2);
             program[ptr as usize] = params[0] + params[1];
             instruction_pointer += 4
         }
         else if opcode == 2 {
-            let params = get_values(3);
-            println!("{:?}", params);
             let ptr = program[instruction_pointer + 3];
+            let params = get_values(2);
             program[ptr as usize] = params[0] * params[1];
             instruction_pointer += 4
         }
@@ -55,11 +53,53 @@ fn run_program(mut program: Vec<i32>, input: i32) {
             // input
         }
         else if opcode == 4 {
-            println!("{:?}", program);
-            let ptr = program[instruction_pointer + 1];
-            println!("Result {}", program[ptr as usize]);
+            let params = get_values(1);
+            println!("Result {}", params[0]);
             instruction_pointer += 2
             // output
+        }
+        else if opcode == 5 {
+            // jump if true
+            let params = get_values(2);
+            if params[0] != 0 {
+                instruction_pointer = params[1] as usize;
+            }
+            else {
+                instruction_pointer += 3
+            }
+        }
+        else if opcode  == 6 {
+        // jump if false
+            let params = get_values(2);
+            if params[0] == 0 {
+                instruction_pointer = params[1] as usize;
+            }
+            else {
+                instruction_pointer += 3
+            }
+        }
+        else if opcode == 7 {
+            // less than 
+            let ptr = program[instruction_pointer + 3];
+            let params = get_values(2);
+            if params[0] < params[1] { // hm
+                program[ptr as usize] = 1;
+            }
+            else {
+                program[ptr as usize] = 0;
+            }
+            instruction_pointer += 4
+        }
+        else if opcode == 8 {
+            let ptr = program[instruction_pointer + 3];
+            let params = get_values(2);
+            if params[0] == params[1] {
+                program[ptr as usize] = 1;
+            }
+            else {
+                program[ptr as usize] = 0;
+            }
+            instruction_pointer += 4
         }
         else if opcode == 99 {
             return 
