@@ -123,6 +123,9 @@ impl Program {
             }
             self.pointer += 4
         }
+        else if opcode == 9 {
+            //implement
+        }
         else if opcode == 99 {
             stop = true;
             
