@@ -36,6 +36,16 @@ impl Program {
         }
     }
 
+    pub fn run_until_output(self: &mut Self) -> i32 {
+        loop {
+            let (output, _) = self.step();
+            match output {
+                Some(i) => return i,
+                None => {},
+            }
+        }
+    }
+
     pub fn step(self: &mut Self) -> (Option<i32>, bool) {
         // returns output if there is some
         let operation = self.memory[self.pointer];
@@ -155,6 +165,9 @@ mod tests {
     #[test]
 
     fn day5_test() {
+        let mut program = Program::from_string("3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99".to_string());
+        program.input = vec![9];
+        assert_eq!(program.run_until_output(), 1001)
     }
 
 }
