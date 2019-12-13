@@ -1,11 +1,12 @@
 use std::io::{self, Read};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Program {
-    memory: Vec<i64>,
+    pub memory: Vec<i64>,
     pointer: usize,
     relative_base: i64,
     pub input: Vec<i64>,
+    pub output: Vec<i64>,
 }
 
 impl Program {
@@ -21,14 +22,15 @@ impl Program {
             .split(",")
             .map(|i| i.parse::<i64>().unwrap())
             .collect();
-        for i in 0..100000 {
+        for _ in 0..100000 {
             memory.push(0);
         }
         Program {
             memory: memory,
             pointer: 0,
             relative_base: 0,
-            input: vec![]
+            input: vec![],
+            output: vec![]
         }
     }
 
@@ -94,8 +96,8 @@ impl Program {
         }
         else if opcode == 4 {
             let params = self.get_values(operation, 1);
+            self.output.push(params[0]);
             output = Some(params[0]);
-            println!("Result {}", params[0]);
             self.pointer += 2
             // output
         }
