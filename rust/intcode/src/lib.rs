@@ -1,10 +1,12 @@
 use std::io::{self, Read};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Program {
-    memory: Vec<i32>,
+    pub memory: Vec<i64>,
     pointer: usize,
-    pub input: Vec<i32>,
+    relative_base: i64,
+    pub input: Vec<i64>,
+    pub output: Vec<i64>,
 }
 
 impl Program {
@@ -15,15 +17,20 @@ impl Program {
     }
 
     pub fn from_string(program_string: String) -> Program {
-        let memory: Vec<i32> = program_string
+        let mut memory: Vec<i64> = program_string
             .replace("\n", "") // Remove ending newline
             .split(",")
-            .map(|i| i.parse::<i32>().unwrap())
+            .map(|i| i.parse::<i64>().unwrap())
             .collect();
+        for _ in 0..100000 {
+            memory.push(0);
+        }
         Program {
             memory: memory,
             pointer: 0,
-            input: vec![]
+            relative_base: 0,
+            input: vec![],
+            output: vec![]
         }
     }
 
@@ -36,7 +43,7 @@ impl Program {
         }
     }
 
-    pub fn run_until_output(self: &mut Self) -> Option<i32> {
+    pub fn run_until_output(self: &mut Self) -> Option<i64> {
         loop {
             let (output, stop) = self.step();
             match output {
@@ -49,34 +56,48 @@ impl Program {
         }
     }
 
-    pub fn step(self: &mut Self) -> (Option<i32>, bool) {
+    pub fn step(self: &mut Self) -> (Option<i64>, bool) {
         // returns output if there is some
         let operation = self.memory[self.pointer];
         let opcode = operation % 100;
         let mut output = None;
         let mut stop = false;
-       if opcode == 1 {
-            let ptr = self.memory[self.pointer + 3];
+        if opcode == 1 {
+            let mut ptr = self.memory[self.pointer + 3];
+            if operation / 10000 == 2 {
+                ptr = self.relative_base + ptr;
+            }
             let params = self.get_values(operation, 2);
             self.memory[ptr as usize] = params[0] + params[1];
             self.pointer += 4
         }
         else if opcode == 2 {
-            let ptr = self.memory[self.pointer + 3];
+            let mut ptr = self.memory[self.pointer + 3];
+            if operation / 10000 == 2 {
+                ptr = self.relative_base + ptr;
+            }
             let params = self.get_values(operation, 2);
             self.memory[ptr as usize] = params[0] * params[1];
             self.pointer += 4
         }
         else if opcode == 3 {
-            let ptr = self.memory[self.pointer + 1];
-            self.memory[ptr as usize] = self.input.pop().unwrap();
+            let mut ptr = self.memory[self.pointer + 1];
+            if operation / 10000 == 2 {
+                ptr = self.relative_base + ptr;
+            }
+            if operation == 203 {
+                self.memory[(self.relative_base + ptr) as usize] = self.input.pop().unwrap();
+            }
+            else  {
+                self.memory[ptr as usize] = self.input.pop().unwrap();
+            }
             self.pointer += 2
             // input
         }
         else if opcode == 4 {
             let params = self.get_values(operation, 1);
+            self.output.push(params[0]);
             output = Some(params[0]);
-            println!("Result {}", params[0]);
             self.pointer += 2
             // output
         }
@@ -102,7 +123,10 @@ impl Program {
         }
         else if opcode == 7 {
             // less than 
-            let ptr = self.memory[self.pointer + 3];
+            let mut ptr = self.memory[self.pointer + 3];
+            if operation / 10000 == 2 {
+                ptr = self.relative_base + ptr;
+            }
             let params = self.get_values(operation, 2);
             if params[0] < params[1] { // hm
                 self.memory[ptr as usize] = 1;
@@ -113,8 +137,11 @@ impl Program {
             self.pointer += 4
         }
         else if opcode == 8 {
-            let ptr = self.memory[self.pointer + 3];
-            let params = self.get_values(operation, 2);
+            let mut ptr = self.memory[self.pointer + 3];
+            if operation / 10000 == 2 {
+                ptr = self.relative_base + ptr;
+            }
+            let params = self.get_values(operation, 3);
             if params[0] == params[1] {
                 self.memory[ptr as usize] = 1;
             }
@@ -124,6 +151,9 @@ impl Program {
             self.pointer += 4
         }
         else if opcode == 9 {
+            let params = self.get_values(operation, 1);
+            self.relative_base += params[0];
+            self.pointer += 2
             //implement
         }
         else if opcode == 99 {
@@ -133,14 +163,17 @@ impl Program {
         (output, stop)
     }
 
-    fn get_values(self: &Self, operation: i32, num_params: usize) -> Vec<i32>{
+    fn get_values(self: &Self, operation: i64, num_params: usize) -> Vec<i64>{
         let mut out = Vec::new();
         for i in 1..=num_params {
             let mut value = self.memory[(self.pointer+i) as usize];
-            let mode = (operation / (i32::pow(10, i as u32)*10)) % 10;
+            let mode = (operation / (i64::pow(10, i as u32)*10)) % 10;
             if mode == 0 { // position mode
                 // value used as pointer
                 value = self.memory[value as usize];
+            }
+            if mode == 2 { // relative mode
+                value = self.memory[(self.relative_base as i64 + value) as usize] // usize?
             }
             out.push(value);
         }
@@ -152,28 +185,38 @@ impl Program {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_program_constructor() {
-        let program = Program::from_string("1,2,3".to_string());
-        assert_eq!(program.memory, vec![1,2,3]);
-        assert_eq!(program.pointer, 0)
-    }
 
     #[test]
-    fn day2_test() {
-        for test in [("1,0,0,0,99", vec![2,0,0,0,99]), ("2,3,0,3,99", vec![2,3,0,6,99]), ("2,4,4,5,99,0", vec![2,4,4,5,99,9801]), ("1,1,1,4,99,5,6,0,99", vec![30,1,1,4,2,5,6,0,99])].iter() {
-            let mut program = Program::from_string(test.0.to_string());
-            program.run_until_stop();
-            assert_eq!(program.memory, test.1);
-        }
-    }
-
-    #[test]
-
     fn day5_test() {
         let mut program = Program::from_string("3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99".to_string());
         program.input = vec![9];
         assert_eq!(program.run_until_output().unwrap(), 1001)
+    }
+
+    #[test]
+    fn day7_test() {
+        let mut program = Program::from_string("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99".to_string());
+        let mut output = vec![];
+        let mut stop = false;
+        while !stop {
+            match program.run_until_output() {
+                Some(o) => output.push(o),
+                None => stop = true
+            }
+        }
+        assert_eq!(output, vec![109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]);
+    }
+
+    #[test]
+    fn day7_test2() {
+        let mut program = Program::from_string("1102,34915192,34915192,7,4,7,99,0".to_string());
+        assert_eq!(program.run_until_output().unwrap(), 1219070632396864)
+    }
+
+    #[test]
+    fn day7_test3() {
+        let mut program = Program::from_string("104,1125899906842624,99".to_string());
+        assert_eq!(program.run_until_output().unwrap(), 1125899906842624)
     }
 
 }

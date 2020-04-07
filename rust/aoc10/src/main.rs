@@ -48,9 +48,17 @@ fn main() {
     println!("{:?}", best);
 }
 
+<<<<<<< HEAD:rust/aoc10/src/main.rs
 <<<<<<< Updated upstream
 fn gcd(mut m: i32, mut n: i32) -> i32 {
     // modified for 0
+||||||| merged common ancestors:aoc10/src/main.rs
+fn gcd(mut m: i32, mut n: i32) -> i32 {
+    // modified for 0
+=======
+fn num_steps(mut m: i32, mut n: i32) -> i32 {
+    // gcd modified for 0
+>>>>>>> 4276669f522a710ff645c5c0c0fbbb9026004c1c:aoc10/src/main.rs
     if n == 0 {
         return m.abs()
 ||||||| merged common ancestors
@@ -94,10 +102,10 @@ fn check_if_between(a: (i32, i32), b: (i32, i32), c: (i32, i32)) -> bool {
         return false
     }
     let badiff = (b.0  -a.0  , b.1 -a.1 );
-    let gcd = gcd(badiff.0, badiff.1);
-    let step = (badiff.0 / gcd, badiff.1 / gcd);
+    let num_steps = num_steps(badiff.0, badiff.1);
+    let step = (badiff.0 / num_steps, badiff.1 / num_steps);
     let mut tracer = (a.0 , a.1 );
-    for _ in 0..=gcd {
+    for _ in 0..=num_steps {
         tracer = (tracer.0  + step.0, tracer.1  + step.1);
         if tracer == (c.0 , c.1 ) {
             return true

@@ -4,8 +4,4 @@
 
 Each solution should take input from stdin from the input/input.txt file
 
-Run `./run_all` to compile and build all solutions
-
-TODO: 
-
--- cleanup intcode machine day 5
+Run `./run_all` to compile and build all solutions (Note -- this doesn't work at the moment. Going to clean up everything later)
