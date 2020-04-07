@@ -20,10 +20,27 @@ fn main() {
         .map(|a1| {
             let count = asteroids.iter().filter(
                 |a2| {
+<<<<<<< Updated upstream
                     *a2 != a1 && asteroids.iter().filter(|a3|{
                         let result = check_if_between(*a1,**a2,**a3);
                         result
                            }).count() == 0 // includes self
+||||||| merged common ancestors
+                    **a2 != **a1 && asteroids.iter().filter(|a3|{
+                        check_if_between(**a1,**a2,**a3)
+                           }).count() > 1 // includes self
+=======
+                    **a2 != **a1 && asteroids.iter().filter(|a3|{
+                        let obstruct = check_if_between(**a1,**a2,**a3);
+                            if obstruct {
+                                println!("Found {:?} between {:?} and {:?}", a3, a1, a2);
+                                return true
+                            }
+                            else{
+                                println!("Found {:?} not between {:?} and {:?}", a3, a1, a2);
+                                return false
+                           }}).count() == 0 // includes self
+>>>>>>> Stashed changes
                 }
                 ).count();
             count
@@ -31,10 +48,35 @@ fn main() {
     println!("{:?}", best);
 }
 
+<<<<<<< Updated upstream
 fn gcd(mut m: i32, mut n: i32) -> i32 {
     // modified for 0
     if n == 0 {
         return m.abs()
+||||||| merged common ancestors
+fn check_if_between(a: (usize, usize), b: (usize, usize), c: (usize, usize)) -> bool {
+    // checks if c is between a and b
+    let xdiffab = b.0 as i32 - a.0 as i32 ;
+    let ydiffab = b.1 as i32 - a.1 as i32;
+    let xdiffac = c.0 as i32 - a.0 as i32;
+    let ydiffac = c.1  as i32- a.1 as i32;
+    // flat special case
+    if xdiffab == 0 || xdiffac == 0 {
+        return xdiffab == xdiffac
+=======
+fn check_if_between(a: (usize, usize), b: (usize, usize), c: (usize, usize)) -> bool {
+    if c == a || c == b {
+        return false
+    }
+    // checks if c is between a and b
+    let xdiffab = b.0 as i32 - a.0 as i32 ;
+    let ydiffab = b.1 as i32 - a.1 as i32;
+    let xdiffac = c.0 as i32 - a.0 as i32;
+    let ydiffac = c.1  as i32- a.1 as i32;
+    // flat special case
+    if xdiffab == 0 || xdiffac == 0 {
+        return xdiffab == xdiffac
+>>>>>>> Stashed changes
     }
     else if m == 0 {
         return n.abs()
